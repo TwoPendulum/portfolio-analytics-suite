@@ -1,0 +1,9 @@
+streamlit>=1.35
+yfinance>=0.2.40
+arch>=6.3
+numpy>=1.26
+pandas>=2.2
+plotly>=5.22
+scipy>=1.13
+pyyaml>=6.0
+pyarrow>=16.0
