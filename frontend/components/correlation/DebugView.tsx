@@ -103,6 +103,7 @@ export default function DebugView({ rhoSeries, obsSeries, activeTickers, initial
 
           return (
             <div key={pairKey} className="card">
+              <h3 className="text-sm font-medium text-white mb-2">{a} vs {b}</h3>
               <PlotlyTimeseries
                 data={chartData}
                 obsData={chartObs}
