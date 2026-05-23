@@ -1,0 +1,15 @@
+{
+  "name": "Portfolio Analytics Suite",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {},
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "forwardPorts": [8000, 3000],
+  "portsAttributes": {
+    "8000": { "label": "Backend API", "onAutoForward": "openPreview" },
+    "3000": { "label": "Frontend", "onAutoForward": "notify" }
+  },
+  "postCreateCommand": "pip install -r requirements.txt && pip install fastapi uvicorn pydantic && cd frontend && npm install",
+  "postStartCommand": "cd backend && nohup uvicorn main:app --port 8000 --host 0.0.0.0 > /tmp/backend.log 2>&1 & cd /workspaces/portfolio-analytics-suite/frontend && npm run dev"
+}
