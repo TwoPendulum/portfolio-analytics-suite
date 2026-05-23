@@ -91,10 +91,10 @@ export default function PlotlyTimeseries({ data, obsData, pairLabel }: Props) {
         height: 350,
         hovermode: "x unified",
         legend: { orientation: "h", y: 1.12, x: 0.5, xanchor: "center" },
-        margin: { l: 60, r: 20, t: 40, b: 50 },
+        margin: { l: 60, r: 20, t: 10, b: 50 },
         yaxis: { range: [-1.25, 1.25], title: "ρ", tickformat: ".0%", gridcolor: "#2D2D44", automargin: true },
         xaxis: { title: "", type: "date", gridcolor: "#2D2D44", automargin: true },
-        title: { text: pairLabel, font: { size: 15, color: "#E0E0E0" } },
+        title: "",
       }}
       config={{ displayModeBar: false, responsive: true }}
       style={{ width: "100%", height: "100%" }}
