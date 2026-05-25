@@ -7,6 +7,28 @@ export async function fetchAssets() {
   return data.assets;
 }
 
+export async function addAsset(ticker: string, name: string, group: string) {
+  const res = await fetch(`${API_BASE}/api/assets`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ticker, name, group }),
+  });
+  if (!res.ok) throw new Error("Failed to add asset");
+  const data = await res.json();
+  return { assets: data.assets, warning: data.warning };
+}
+
+export async function updateAsset(ticker: string, name: string, group: string) {
+  const res = await fetch(`${API_BASE}/api/assets/${ticker}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, group }),
+  });
+  if (!res.ok) throw new Error("Failed to update asset");
+  const data = await res.json();
+  return { assets: data.assets, error: data.error };
+}
+
 export async function fetchCompute(params: {
   tickers: string[];
   startDate: string;

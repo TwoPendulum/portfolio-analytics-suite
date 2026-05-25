@@ -1,31 +1,43 @@
 assets:
-  - ticker: "QQQ"
-    name: "纳斯达克100ETF"
-    group: "US Equity"
-  - ticker: "SPY"
-    name: "标普500ETF"
-    group: "US Equity"
-  - ticker: "IWM"
-    name: "罗素2000ETF"
-    group: "US Equity"
-  - ticker: "COWZ"
-    name: "现金流ETF"
-    group: "US Equity"
-  - ticker: "GLD"
-    name: "黄金ETF"
-    group: "Commodity"
-  - ticker: "STIP"
-    name: "短期TIPS ETF"
-    group: "Fixed Income"
-  - ticker: "TLT"
-    name: "20年期美债ETF"
-    group: "Fixed Income"
-  - ticker: "SHY"
-    name: "短期美债ETF"
-    group: "Fixed Income"
-  - ticker: "BTC-USD"
-    name: "比特币"
-    group: "Crypto"
-  - ticker: "ETH-USD"
-    name: "以太坊"
-    group: "Crypto"
+- group: US Equity
+  name: 纳斯达克100ETF
+  ticker: QQQ
+- group: US Equity
+  name: 标普500ETF
+  ticker: SPY
+- group: US Equity
+  name: 罗素2000ETF
+  ticker: IWM
+- group: US Equity
+  name: 现金流ETF
+  ticker: COWZ
+- group: Commodity
+  name: 黄金ETF
+  ticker: GLD
+- group: Fixed Income
+  name: 短期TIPS ETF
+  ticker: STIP
+- group: Fixed Income
+  name: 20年期美债ETF
+  ticker: TLT
+- group: Fixed Income
+  name: 短期美债ETF
+  ticker: SHY
+- group: Crypto
+  name: 比特币
+  ticker: BTC-USD
+- group: Crypto
+  name: 以太坊
+  ticker: ETH-USD
+- group: US Equity
+  name: 标普低波ETF
+  ticker: SPLV
+- group: US Equity
+  name: 标普高红利
+  ticker: SPHD
+- group: US Equity
+  name: DJD
+  ticker: DJD
+- group: US Equity
+  name: 标普价值ETF
+  ticker: VOOV

@@ -11,7 +11,7 @@ import WeightsBar from "@/components/frontier/WeightsBar";
 import CustomPortfolio from "@/components/frontier/CustomPortfolio";
 import MethodologyView from "@/components/methodology/MethodologyView";
 import { AssetConfig, MatrixData, RhoSeries, ComputeResponse, FrontierResponse } from "@/lib/types";
-import { fetchAssets, fetchCompute, fetchFrontier } from "@/lib/api";
+import { fetchAssets, fetchCompute, fetchFrontier, addAsset, updateAsset } from "@/lib/api";
 
 function today(): string { return new Date().toISOString().slice(0, 10); }
 function yearsAgo(n: number): string {
@@ -49,6 +49,8 @@ export default function Home() {
   }[]>([]);
   const [rfRate, setRfRate] = useState(4.5);
   const [efResult, setEfResult] = useState<FrontierResponse | null>(null);
+  const [efRhoMat, setEfRhoMat] = useState<number[][] | null>(null);
+  const [efSigmas, setEfSigmas] = useState<number[] | null>(null);
   const [frontierPointIdx, setFrontierPointIdx] = useState(0);
   const [customPortfolio, setCustomPortfolio] = useState<{
     ret: number; vol: number; sharpe: number; tickers: string[];
@@ -76,6 +78,8 @@ export default function Home() {
       setHistorical(data.historical || {});
       setComputedOnce(true);
       setEfResult(null);
+      setEfRhoMat(null);
+      setEfSigmas(null);
       setCustomPortfolio(null);
     } catch (e: any) {
       setWarnings([`Computation failed: ${e.message}`]);
@@ -83,6 +87,31 @@ export default function Home() {
       setLoading(false);
     }
   }, [selectedTickers, startDate, endDate, Q, R]);
+
+  const handleAddAsset = useCallback(async (ticker: string, name: string, group: string) => {
+    try {
+      const result = await addAsset(ticker, name, group);
+      if (result.warning) {
+        setWarnings([result.warning]);
+      }
+      setAssets(result.assets);
+      setSelectedTickers((prev) => [...prev, ticker]);
+    } catch (e: any) {
+      setWarnings([`Failed to add asset: ${e.message}`]);
+    }
+  }, []);
+
+  const handleUpdateAsset = useCallback(async (ticker: string, name: string, group: string) => {
+    try {
+      const result = await updateAsset(ticker, name, group);
+      if (result.error) {
+        setWarnings([result.error]);
+      }
+      setAssets(result.assets);
+    } catch (e: any) {
+      setWarnings([`Failed to update asset: ${e.message}`]);
+    }
+  }, []);
 
   const handleAutoFill = () => {
     if (!activeTickers.length) return;
@@ -125,6 +154,8 @@ export default function Home() {
         allowShort: included.some((r) => r.allowShort),
       });
       setEfResult(data);
+      setEfRhoMat(rhoMat);
+      setEfSigmas(included.map((r) => r.sigma / 100));
       setFrontierPointIdx(0);
       setWarnings(data.warnings || []);
     } catch (e: any) {
@@ -147,6 +178,8 @@ export default function Home() {
         onTickersChange={setSelectedTickers}
         onStartDateChange={setStartDate} onEndDateChange={setEndDate}
         onQChange={setQ} onRChange={setR} onRun={handleRun}
+        onAddAsset={handleAddAsset}
+        onUpdateAsset={handleUpdateAsset}
       />
 
       <main className="flex-1 p-6 space-y-6 min-w-0">
@@ -244,12 +277,26 @@ export default function Home() {
                       tickers={efResult.assetPoints.tickers}
                       names={efResult.assetPoints.tickers.map((t: string) => namesMap[t] || t)}
                       onPlot={(weights) => {
-                        const wArr = efResult.assetPoints.tickers.map((t: string) => (weights[t] || 0) / 100);
+                        const tickers = efResult.assetPoints.tickers;
+                        const n = tickers.length;
+                        const wArr = tickers.map((t: string) => (weights[t] || 0) / 100);
                         const ret = wArr.reduce((s, w, i) => s + w * efResult.assetPoints.ret[i], 0);
-                        const vol = Math.sqrt(wArr.reduce((s, w, i) =>
-                          s + w * w * efResult.assetPoints.vol[i] * efResult.assetPoints.vol[i], 0));
+                        const sigmas = efSigmas || efResult.assetPoints.vol;
+                        const rho = efRhoMat;
+                        let variance = 0;
+                        if (rho && sigmas) {
+                          for (let i = 0; i < n; i++) {
+                            for (let j = 0; j < n; j++) {
+                              variance += wArr[i] * wArr[j] * sigmas[i] * sigmas[j] * rho[i][j];
+                            }
+                          }
+                        } else {
+                          variance = wArr.reduce((s, w, i) =>
+                            s + w * w * sigmas[i] * sigmas[i], 0);
+                        }
+                        const vol = Math.sqrt(Math.max(variance, 0));
                         const sharpe = (ret - rfRate / 100) / (vol || 1e-10);
-                        setCustomPortfolio({ ret, vol, sharpe, tickers: efResult.assetPoints.tickers });
+                        setCustomPortfolio({ ret, vol, sharpe, tickers });
                       }}
                     />
 

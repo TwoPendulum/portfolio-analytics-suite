@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { AssetConfig } from "@/lib/types";
 
 interface SidebarProps {
@@ -19,6 +20,8 @@ interface SidebarProps {
   onQChange: (q: number) => void;
   onRChange: (r: number) => void;
   onRun: () => void;
+  onAddAsset: (ticker: string, name: string, group: string) => void;
+  onUpdateAsset: (ticker: string, name: string, group: string) => void;
 }
 
 export default function Sidebar(props: SidebarProps) {
@@ -27,8 +30,45 @@ export default function Sidebar(props: SidebarProps) {
     startDate, endDate, Q, R, loading, computedOnce,
     activeTickers, frequencies,
     onTickersChange, onStartDateChange, onEndDateChange,
-    onQChange, onRChange, onRun,
+    onQChange, onRChange, onRun, onAddAsset, onUpdateAsset,
   } = props;
+
+  const [customTicker, setCustomTicker] = useState("");
+  const [customName, setCustomName] = useState("");
+  const [customGroup, setCustomGroup] = useState("");
+  const [editingTicker, setEditingTicker] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editGroup, setEditGroup] = useState("");
+  const allTickers = assets.map((a) => a.ticker);
+  const duplicate = allTickers.includes(customTicker.toUpperCase());
+
+  const handleAdd = () => {
+    const ticker = customTicker.trim().toUpperCase();
+    if (!ticker || duplicate) return;
+    onAddAsset(ticker, customName.trim() || ticker, customGroup.trim() || "Custom");
+    setCustomTicker("");
+    setCustomName("");
+    setCustomGroup("");
+  };
+
+  const startEdit = (a: AssetConfig) => {
+    setEditingTicker(a.ticker);
+    setEditName(a.name);
+    setEditGroup(a.group);
+  };
+
+  const cancelEdit = () => {
+    setEditingTicker(null);
+    setEditName("");
+    setEditGroup("");
+  };
+
+  const saveEdit = () => {
+    if (editingTicker) {
+      onUpdateAsset(editingTicker, editName.trim() || editingTicker, editGroup.trim() || "Custom");
+    }
+    cancelEdit();
+  };
 
   return (
     <aside className="w-80 shrink-0 space-y-5 p-4 border-r border-border min-h-screen">
@@ -40,26 +80,116 @@ export default function Sidebar(props: SidebarProps) {
         <label className="text-sm text-gray-400 mb-2 block">Select Assets</label>
         <div className="max-h-80 overflow-y-auto space-y-1.5">
           {assets.map((a) => (
-            <label key={a.ticker} className="flex items-start gap-2 text-sm cursor-pointer py-0.5">
-              <input
-                type="checkbox"
-                checked={selectedTickers.includes(a.ticker)}
-                onChange={() => {
-                  if (selectedTickers.includes(a.ticker)) {
-                    onTickersChange(selectedTickers.filter((t) => t !== a.ticker));
-                  } else {
-                    onTickersChange([...selectedTickers, a.ticker]);
-                  }
-                }}
-                className="accent-accent mt-0.5 shrink-0"
-              />
-              <div className="min-w-0">
-                <span className="text-gray-300">{a.ticker} — {a.name}</span>
-                <span className="text-gray-500 text-xs ml-2">{a.group}</span>
+            <div key={a.ticker}>
+              <div className="flex items-start gap-1 text-sm py-0.5 group">
+                <label className="flex items-start gap-2 cursor-pointer flex-1 min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={selectedTickers.includes(a.ticker)}
+                    onChange={() => {
+                      if (selectedTickers.includes(a.ticker)) {
+                        onTickersChange(selectedTickers.filter((t) => t !== a.ticker));
+                      } else {
+                        onTickersChange([...selectedTickers, a.ticker]);
+                      }
+                    }}
+                    className="accent-accent mt-0.5 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <span className="text-gray-300">{a.ticker} — {a.name}</span>
+                    <span className="text-gray-500 text-xs ml-2">{a.group}</span>
+                  </div>
+                </label>
+                <button
+                  onClick={() => startEdit(a)}
+                  className="text-gray-600 hover:text-gray-400 shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Edit name / group"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                  </svg>
+                </button>
               </div>
-            </label>
+              {editingTicker === a.ticker && (
+                <div className="ml-6 mt-1 mb-2 space-y-1.5">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") cancelEdit(); }}
+                    placeholder="Name"
+                    className="w-full text-xs px-2 py-1 rounded bg-surface border border-accent/50 text-white"
+                  />
+                  <input
+                    type="text"
+                    value={editGroup}
+                    onChange={(e) => setEditGroup(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") cancelEdit(); }}
+                    placeholder="Group"
+                    className="w-full text-xs px-2 py-1 rounded bg-surface border border-accent/50 text-white"
+                  />
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={saveEdit}
+                      className="px-2 py-0.5 text-xs rounded bg-accent text-white font-medium"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="px-2 py-0.5 text-xs rounded bg-surface border border-border text-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
         </div>
+      </div>
+
+      {/* Add Custom Ticker */}
+      <div>
+        <label className="text-xs text-gray-400 mb-1.5 block">Add Custom Ticker</label>
+        <div className="space-y-1.5">
+          <input
+            type="text"
+            value={customTicker}
+            onChange={(e) => setCustomTicker(e.target.value.toUpperCase())}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+            placeholder="Ticker (e.g. AAPL)"
+            className="w-full text-sm px-2 py-1 rounded bg-surface border border-border text-white placeholder-gray-600"
+          />
+          <input
+            type="text"
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+            placeholder="Name (optional)"
+            className="w-full text-sm px-2 py-1 rounded bg-surface border border-border text-white placeholder-gray-600"
+          />
+          <div className="flex gap-1.5">
+            <input
+              type="text"
+              value={customGroup}
+              onChange={(e) => setCustomGroup(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+              placeholder="Group (optional)"
+              className="flex-1 text-sm px-2 py-1 rounded bg-surface border border-border text-white placeholder-gray-600"
+            />
+            <button
+              className="px-3 py-1 text-sm rounded bg-accent text-white font-medium disabled:opacity-40 shrink-0"
+              disabled={!customTicker.trim() || duplicate}
+              onClick={handleAdd}
+            >
+              Add
+            </button>
+          </div>
+        </div>
+        {duplicate && (
+          <p className="text-xs text-yellow-400 mt-1">Ticker already exists.</p>
+        )}
       </div>
 
       {/* Date Range */}

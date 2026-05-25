@@ -26,12 +26,11 @@ def garch_standardize(
         vol = pd.Series(np.ones_like(r), index=clean.index)
         return std, vol, "Near-zero volatility series; returning zeros."
 
-    # Fit GARCH(1,1)
     try:
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             model = arch_model(r * 100, vol="Garch", p=1, q=1, dist="normal")
-            result = model.fit(update_freq=0, disp="off", options={"maxiter": 500})
+            result = model.fit(update_freq=0, disp="off", options={"maxiter": 2000})
 
         convergence_ok = True
         for w in caught:
@@ -45,7 +44,6 @@ def garch_standardize(
         fallback_sigma = _ewma_fallback(r)
         std = pd.Series(r / fallback_sigma, index=clean.index)
         vol = pd.Series(fallback_sigma, index=clean.index)
-        # Suppress warning for ultra-low-volatility assets where GARCH is expected to fail
         if warn_on_fallback and np.std(r) >= 0.003:
             warning_msg = "GARCH(1,1) did not converge; using EWMA fallback."
         return std, vol, warning_msg
