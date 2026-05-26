@@ -281,13 +281,14 @@ export default function Home() {
                         const n = tickers.length;
                         const wArr = tickers.map((t: string) => (weights[t] || 0) / 100);
                         const ret = wArr.reduce((s, w, i) => s + w * efResult.assetPoints.ret[i], 0);
-                        const sigmas = efSigmas || efResult.assetPoints.vol;
+                        const sigmas = efResult.assetPoints.vol;
                         const rho = efRhoMat;
                         let variance = 0;
-                        if (rho && sigmas) {
+                        if (rho) {
                           for (let i = 0; i < n; i++) {
                             for (let j = 0; j < n; j++) {
-                              variance += wArr[i] * wArr[j] * sigmas[i] * sigmas[j] * rho[i][j];
+                              const r = i === j ? 1.0 : Math.min(rho[i][j], 0.999);
+                              variance += wArr[i] * wArr[j] * sigmas[i] * sigmas[j] * r;
                             }
                           }
                         } else {
