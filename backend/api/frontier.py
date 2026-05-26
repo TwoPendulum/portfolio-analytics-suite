@@ -40,7 +40,7 @@ async def frontier(req: FrontierRequest):
         mu, Sigma, rf, req.allowShort, n_points=req.nPoints,
     )
 
-    asset_pts = compute_asset_points(mu, sigma, req.tickers)
+    asset_pts = compute_asset_points(mu, np.sqrt(np.diag(Sigma)), req.tickers)
 
     def serialize_pt(pt):
         if pt is None:
