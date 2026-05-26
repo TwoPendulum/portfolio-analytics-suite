@@ -99,19 +99,18 @@ def fetch_data(
     # Filter to business days only (crypto trades 7d/wk and would pad weekends for all)
     returns = returns[returns.index.dayofweek < 5]
 
-    # Drop any remaining NaN returns (genuine data gaps)
-    for t in returns.columns:
-        nan_count = returns[t].isna().sum()
-        if nan_count > 0:
-            if nan_count > 5:
-                warnings.append(f"{t}: {nan_count} missing return values.")
-        returns[t] = returns[t].fillna(0.0)
-
-    # Drop tickers with >50% NaN
+    # Drop tickers with >50% NaN before fillna
     valid_tickers = [t for t in returns.columns if returns[t].isna().mean() < 0.5]
     dropped = set(tickers) - set(valid_tickers)
     for t in dropped:
         warnings.append(f"{t}: dropped (>50% missing data).")
+
+    # Fill remaining NaN returns (genuine data gaps)
+    for t in valid_tickers:
+        nan_count = returns[t].isna().sum()
+        if nan_count > 5:
+            warnings.append(f"{t}: {nan_count} missing return values.")
+        returns[t] = returns[t].fillna(0.0)
 
     returns = returns[valid_tickers].dropna()
 
