@@ -10,10 +10,18 @@ def build_cov_matrix(
     rho_matrix: np.ndarray,
     reg_lambda: float = 1e-6,
 ) -> np.ndarray:
-    """Construct covariance matrix from correlations and volatilities, with regularization."""
-    Sigma = np.diag(sigma) @ rho_matrix @ np.diag(sigma)
+    """Construct covariance matrix from correlations and volatilities.
+
+    Uses proportional regularization (λ * diag(σ²)) instead of constant (λ * I)
+    so that low-volatility assets are not disproportionately inflated when
+    the correlation matrix is near-singular (e.g. ρ ≈ 1 between two assets).
+    """
+    rho = np.clip(rho_matrix, -0.999, 0.999)
+    np.fill_diagonal(rho, 1.0)
+    Sigma = np.diag(sigma) @ rho @ np.diag(sigma)
+    D2 = np.diag(sigma ** 2)
     while True:
-        Sigma_reg = Sigma + reg_lambda * np.eye(len(sigma))
+        Sigma_reg = Sigma + reg_lambda * D2
         try:
             eigvals = np.linalg.eigvals(Sigma_reg)
             if np.all(eigvals > 0):
@@ -21,7 +29,7 @@ def build_cov_matrix(
         except np.linalg.LinAlgError:
             pass
         reg_lambda *= 2
-        if reg_lambda > 1e-2:
+        if reg_lambda > 1e-1:
             return Sigma_reg
 
 
